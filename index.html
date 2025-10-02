@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -23,7 +24,11 @@
     .add-mini{width:36px;height:36px;border-radius:50%;border:1px dashed var(--border);background:#fff;font-size:22px;display:grid;place-items:center;cursor:pointer}
     .chart-wrap{display:flex;gap:12px;align-items:center;justify-content:space-between} .chart-card{flex:1} .print-fab{width:48px;height:48px;border:none;border-radius:50%;background:#fff;border:1px solid var(--border);box-shadow:var(--shadow);display:grid;place-items:center;cursor:pointer}
     .summary{display:flex;justify-content:space-between;font-weight:700;margin-top:8px} .muted{color:var(--muted)}
-    @media(max-width:420px){.expense-row{grid-template-columns:1fr 1fr .8fr auto}.chart-wrap{flex-direction:column;align-items:stretch}.print-fab{align-self:flex-end}}
+    .zebra{border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .zebra-row{display:grid;grid-template-columns:1fr 1fr .8fr;gap:8px;padding:10px 12px}
+    .zebra-row:nth-child(odd){background:#fafafa}
+    .zebra-head{font-weight:700;background:#f0f2f5}
+    @media(max-width:420px){.zebra-row{grid-template-columns:1fr 1fr .8fr}.expense-row{grid-template-columns:1fr 1fr .8fr auto}.chart-wrap{flex-direction:column;align-items:stretch}.print-fab{align-self:flex-end}}
     @media print{header,.month-nav,.add-mini,.btn-row,.print-fab{display:none!important} body{background:#fff} .card{box-shadow:none;border:1px solid #ddd}}
   </style>
 </head>
@@ -40,6 +45,12 @@
         <div class="month-label" id="monthLabel">–</div>
         <button class="month-btn" id="nextMonth" aria-label="Próximo mês">▶</button>
       </div>
+    </section>
+
+    <!-- LISTA ZEBRADA DOS LANÇAMENTOS -->
+    <section class="card" id="listCard">
+      <div style="font-weight:700;margin-bottom:8px">Lançados no mês</div>
+      <div class="zebra" id="zebra"></div>
     </section>
 
     <section class="card" id="incomeCard">
@@ -74,7 +85,7 @@
   </div>
 
 <script>
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyKkUvoUv3jisEqkgUvb76OlREnrtZMz-bBktm6bQ-X7SH7db7XMOUQ8VTuFhlv4j_hkA/exec'; // <- cole aqui a URL do Apps Script Web App
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx4T4zvCEA-Eg88k9Hox0wbi5_8hevmFYvu4_Z_11nWSZ16w4nC_JZ5GV9YnFekpx3tjA/exec';
 const CATEGORIES = ['Aluguel','Passeio','Alimentacao','Compra de manutencao','Medico','gasolina','conserto','roupas','calcado','gadget','telefonia','Assinaturas Mensais','Cantina da Escola','Energia','oferta','Transporte','Internet','Água','IPTU','Educação','Lazer','Presentes','Farmácia','Outros'];
 
 let currentYM = toYM(new Date());
@@ -88,10 +99,10 @@ function el(id){return document.getElementById(id)}
 
 function makeExpenseRow(data={name:'',category:'Alimentacao',amount:''}){
   const row=document.createElement('div');row.className='expense-row';
-  row.innerHTML=`<input type="text" placeholder="Nome da despesa" value="${data.name||''}" />
+  row.innerHTML=`<input type=\"text\" placeholder=\"Nome da despesa\" value=\"${data.name||''}\" />
     <select>${CATEGORIES.map(c=>`<option ${c===data.category?'selected':''}>${c}</option>`).join('')}</select>
-    <input type="number" inputmode="decimal" placeholder="0,00" value="${data.amount||''}" />
-    <button class="btn btn-goiaba" title="Remover">×</button>`;
+    <input type=\"number\" inputmode=\"decimal\" placeholder=\"0,00\" value=\"${data.amount||''}\" />
+    <button class=\"btn btn-goiaba\" title=\"Remover\">×</button>`;
   const delBtn=row.children[3];delBtn.addEventListener('click',()=>row.remove());
   return row;
 }
@@ -100,37 +111,43 @@ function getExpensesFromDOM(){return[...document.querySelectorAll('#expensesList
 
 function renderExpensesList(expenses){const list=el('expensesList');list.innerHTML='';if(!expenses||expenses.length===0){list.appendChild(makeExpenseRow())}else{expenses.forEach(ex=>list.appendChild(makeExpenseRow(ex)))}}
 
-async function fetchJSON(url){
-  const r=await fetch(url,{cache:'no-store',mode:'cors',credentials:'omit'});return await r.json();
+function renderZebra(expenses){
+  const z=el('zebra');
+  z.innerHTML='';
+  const head=document.createElement('div');head.className='zebra-row zebra-head';head.innerHTML='<div>Descrição</div><div>Categoria</div><div style="text-align:right">Valor</div>';
+  z.appendChild(head);
+  if(!expenses||!expenses.length){
+    const empty=document.createElement('div');empty.className='zebra-row';empty.innerHTML='<div>Nenhuma despesa lançada</div><div>-</div><div style="text-align:right">R$ 0,00</div>';
+    z.appendChild(empty);return;
+  }
+  expenses.forEach(ex=>{
+    const r=document.createElement('div');r.className='zebra-row';r.innerHTML=`<div>${ex.name||ex.category}</div><div>${ex.category}</div><div style="text-align:right">${money(ex.amount||0)}</div>`;z.appendChild(r);
+  });
 }
+
+async function fetchJSON(url){const r=await fetch(url,{cache:'no-store',mode:'cors',credentials:'omit'});return await r.json();}
 async function fetchMonth(ym){const ts=Date.now();return await fetchJSON(`${WEB_APP_URL}?action=getMonth&ym=${encodeURIComponent(ym)}&ts=${ts}`)}
 async function fetchMeta(){const ts=Date.now();try{const j=await fetchJSON(`${WEB_APP_URL}?action=meta&ts=${ts}`);if(j.defaultSalary&&!el('salary').value)el('salary').value=j.defaultSalary}catch(e){}}
 
 async function saveMonth(payload){
-  const r=await fetch(WEB_APP_URL,{
-    method:'POST',
-    headers:{'Content-Type':'text/plain;charset=utf-8'}, // simple request, no preflight
-    cache:'no-store',
-    body:JSON.stringify(payload)
-  });
+  const r=await fetch(WEB_APP_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},cache:'no-store',body:JSON.stringify(payload)});
   return await r.json();
 }
 
 function renderBarChart(byCategory){
-  const ctx=el('bar');
-  const labels=Object.keys(byCategory);
-  const data=Object.values(byCategory);
+  const ctx=el('bar');const labels=Object.keys(byCategory);const data=Object.values(byCategory);
   if(chart)chart.destroy();
   chart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Despesas por categoria',data} ]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
 }
 
 async function loadYM(ym){
   currentYM=ym;el('monthLabel').textContent=ymToLabel(ym);
-  const data=await fetchMonth(ym); // sempre servidor
+  const data=await fetchMonth(ym);
   // preencher UI
   el('salary').value=(data.salary??2600);
   el('extra').value=(data.extraIncome??0);
   renderExpensesList(data.expenses||[]);
+  renderZebra(data.expenses||[]);
   // totais
   el('sumIncome').textContent=money((data.totalIncome||0));
   el('sumExpense').textContent=money((data.totalExpenses||0));
@@ -144,17 +161,10 @@ window.addEventListener('DOMContentLoaded',async()=>{
   el('addExpense').addEventListener('click',()=>{el('expensesList').appendChild(makeExpenseRow())});
   el('saveBtn').addEventListener('click',async()=>{
     try{
-      const payload={
-        ym:currentYM,
-        dateISO: todayISO(currentYM), // sobrescreve pelo dia
-        salary:parseFloat(el('salary').value||'0')||0,
-        extraIncome:parseFloat(el('extra').value||'0')||0,
-        expenses:getExpensesFromDOM()
-      };
+      const payload={ym:currentYM,dateISO:todayISO(currentYM),salary:parseFloat(el('salary').value||'0')||0,extraIncome:parseFloat(el('extra').value||'0')||0,expenses:getExpensesFromDOM()};
       const res=await saveMonth(payload);
-      if(res&&res.ok){await loadYM(currentYM);alert('Lançamentos salvos!')}
-      else{alert('Falha ao salvar: '+(res&&res.error?res.error:'erro desconhecido'))}
-    }catch(err){alert('Erro de rede/CORS. Verifique Web App publicado como "Anyone with the link".')} 
+      if(res&&res.ok){await loadYM(currentYM);alert('Lançamentos salvos!')} else {alert('Falha ao salvar: '+(res&&res.error?res.error:'erro desconhecido'))}
+    }catch(err){alert('Erro de rede/CORS. Verifique Web App publicado como "Anyone with the link".')}
   });
   el('clearLocal').addEventListener('click',()=>{localStorage.removeItem('financeDraft:'+currentYM);renderExpensesList([])});
   el('printBtn').addEventListener('click',()=>window.print());
