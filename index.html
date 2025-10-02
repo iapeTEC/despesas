@@ -54,9 +54,6 @@
   </header>
 
   <div class="container">
-    <!-- Painel de debug (opcional) -->
-    <pre id="debug" style="white-space:pre-wrap;font:12px/1.4 ui-monospace,monospace;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin:12px 8px;max-height:220px;overflow:auto"></pre>
-
     <section class="card">
       <div class="month-nav">
         <button class="month-btn" id="prevMonth" aria-label="Mês anterior">◀</button>
@@ -105,7 +102,7 @@
 <script>
 const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwMNBWfTmB4lT6V3wJAks_AE3X96XFVuIRb1L9JdpnlmbRyYpN5OlZW3pFtMm572NVBTQ/exec';
 
-// use os mesmos nomes/acentos do backend para evitar categorias duplicadas
+// use os mesmos nomes do backend para não duplicar categorias
 const CATEGORIES = [
   'Aluguel','Passeio','Alimentação','Compra de manutenção','Médico','Gasolina',
   'Conserto','Roupas','Calçado','Gadget','Telefonia','Assinaturas Mensais',
@@ -122,14 +119,6 @@ function todayISO(ym){const [y,m]=ym.split('-');const now=new Date();const d=Str
 function ymToLabel(ym){const [y,m]=ym.split('-').map(Number);const date=new Date(y,m-1,1);return date.toLocaleDateString('pt-BR',{month:'long',year:'numeric'})}
 function money(n){return (Number(n)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
 function el(id){return document.getElementById(id)}
-function showDebug(label, data) {
-  const box = document.getElementById('debug'); if (!box) return;
-  const txt = `[${new Date().toLocaleTimeString()}] ${label}:\n` +
-              (typeof data === 'string' ? data : JSON.stringify(data, null, 2)) +
-              '\n-----------------------------\n';
-  box.textContent = txt + box.textContent;
-  console.log(label, data);
-}
 
 // ---------- UI builders ----------
 function makeExpenseRow(data={name:'',category:'Alimentação',amount:''}){
@@ -138,7 +127,7 @@ function makeExpenseRow(data={name:'',category:'Alimentação',amount:''}){
     <select>${CATEGORIES.map(c=>`<option ${c===data.category?'selected':''}>${c}</option>`).join('')}</select>
     <input type="number" inputmode="decimal" placeholder="0,00" value="${data.amount||''}" />
     <button class="btn btn-goiaba" title="Remover">×</button>`;
-  const delBtn=row.children[3];delBtn.addEventListener('click',()=>row.remove());
+  row.children[3].addEventListener('click',()=>row.remove());
   return row;
 }
 
@@ -187,10 +176,9 @@ function renderZebra(expenses){
   });
 }
 
-// ---------- Networking com logs ----------
+// ---------- Networking ----------
 async function fetchJSON(url){
   const full = url + (url.includes('?') ? '&' : '?') + 'ts=' + Date.now();
-  showDebug('HTTP GET →', full);
   const r = await fetch(full, {
     cache: 'no-store',
     mode: 'cors',
@@ -198,33 +186,25 @@ async function fetchJSON(url){
     headers: { 'Accept': 'application/json' }
   });
   const text = await r.text();
-  showDebug('HTTP GET raw ←', text);
-  let json;
-  try { json = JSON.parse(text); } catch (e) { showDebug('HTTP GET JSON parse ERROR', e.message); throw e; }
-  showDebug('HTTP GET json ←', json);
-  return json;
+  try { return JSON.parse(text); } catch { throw new Error('Resposta inválida do servidor'); }
 }
 async function fetchMonth(ym){ return await fetchJSON(`${WEB_APP_URL}?action=getMonth&ym=${encodeURIComponent(ym)}`); }
 async function fetchMeta(){
   try{
     const j=await fetchJSON(`${WEB_APP_URL}?action=meta`);
     if(j.defaultSalary&&!el('salary').value) el('salary').value=j.defaultSalary;
-  }catch(e){ /* segue a vida */ }
+  }catch(e){ /* segue sem meta */ }
 }
 
 async function saveMonth(payload){
-  showDebug('HTTP POST → payload', payload);
   const r=await fetch(WEB_APP_URL,{
     method:'POST',
-    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    headers:{'Content-Type':'text/plain;charset=utf-8'}, // evita preflight
     cache:'no-store',
     body:JSON.stringify(payload)
   });
   const txt = await r.text();
-  showDebug('HTTP POST raw ←', txt);
-  let json; try { json = JSON.parse(txt); } catch(e){ showDebug('HTTP POST JSON parse ERROR', e.message); throw e; }
-  showDebug('HTTP POST json ←', json);
-  return json;
+  try { return JSON.parse(txt); } catch { throw new Error('Falha ao salvar'); }
 }
 
 // ---------- Chart ----------
@@ -248,7 +228,6 @@ async function loadYM(ym){
     el('monthLabel').textContent=ymToLabel(ym);
 
     const data = await fetchMonth(ym);
-    showDebug('loadYM data', data);
     if (data && data.ok === false) {
       alert('Erro ao carregar: ' + (data.error || 'desconhecido'));
       return;
@@ -266,8 +245,7 @@ async function loadYM(ym){
 
     renderBarChart(data.byCategory || {});
   } catch(err) {
-    showDebug('loadYM ERROR', err.message || err);
-    alert('Falha ao carregar mês: ' + (err.message || err));
+    alert('Falha ao carregar mês: ' + err.message);
   } finally {
     document.body.classList.remove('loading');
   }
@@ -290,8 +268,8 @@ window.addEventListener('DOMContentLoaded',async()=>{
       };
       const res=await saveMonth(payload);
       if(res&&res.ok){
-        alert('Lançamentos salvos!');
         await loadYM(currentYM); // recarrega do servidor (lista + totais + gráfico)
+        alert('Lançamentos salvos!');
       } else {
         alert('Falha ao salvar: '+(res&&res.error?res.error:'erro desconhecido'));
       }
