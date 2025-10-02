@@ -10,37 +10,53 @@
     :root { --bg:#f8f8f9; --card:#fff; --fg:#111; --muted:#6b7280; --blue:#0a84ff; --green:#34c759; --goiaba:#ff6b6b; --border:#e5e7eb; --shadow:0 10px 20px rgba(0,0,0,.06); --radius:18px; }
     *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',Inter,Roboto,'Segoe UI',system-ui,sans-serif}
     header{position:sticky;top:0;z-index:10;background:var(--bg);padding:14px 16px 8px;border-bottom:1px solid var(--border)} .title{font-weight:700;letter-spacing:.2px} .sub{color:var(--muted);font-size:12px}
-    .container{max-width:560px;margin:0 auto;padding:12px} .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin:12px 8px}
-    .month-nav{display:flex;align-items:center;justify-content:space-between} .month-btn{width:44px;height:44px;border-radius:50%;border:1px solid var(--border);background:#fff;display:grid;place-items:center;font-size:20px;cursor:pointer}
+    .container{max-width:560px;margin:0 auto;padding:12px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin:12px 8px}
+    .month-nav{display:flex;align-items:center;justify-content:space-between}
+    .month-btn{width:44px;height:44px;border-radius:50%;border:1px solid var(--border);background:#fff;display:grid;place-items:center;font-size:20px;cursor:pointer}
     .month-label{font-weight:700;font-size:18px}
-    .field{display:flex;flex-direction:column;gap:6px;margin:8px 0} label{font-size:12px;color:var(--muted)} input,select{min-width:0;width:100%;appearance:none;border:1px solid var(--border);border-radius:12px;padding:12px 14px;font-size:16px;background:#fff}
+    .field{display:flex;flex-direction:column;gap:6px;margin:8px 0} label{font-size:12px;color:var(--muted)}
+    input,select{min-width:0;width:100%;appearance:none;border:1px solid var(--border);border-radius:12px;padding:12px 14px;font-size:16px;background:#fff}
     .grid{display:grid;gap:10px}
     .grid-2{grid-template-columns:1fr}
     @media(min-width:600px){.grid-2{grid-template-columns:1fr 1fr}}
     .expense-row{display:grid;grid-template-columns:1fr 1fr .8fr auto;gap:8px;align-items:center;margin-top:8px}
-    .btn-row{display:flex;gap:10px;flex-wrap:wrap} .btn{border:none;border-radius:14px;padding:12px 16px;font-weight:600;cursor:pointer}
-    .btn-blue{background:var(--blue);color:#fff} .btn-green{background:var(--green);color:#fff} .btn-goiaba{background:var(--goiaba);color:#fff} .btn-ghost{background:#fff;border:1px solid var(--border)}
+    .btn-row{display:flex;gap:10px;flex-wrap:wrap}
+    .btn{border:none;border-radius:14px;padding:12px 16px;font-weight:600;cursor:pointer}
+    .btn-blue{background:var(--blue);color:#fff}
+    .btn-green{background:var(--green);color:#fff}
+    .btn-goiaba{background:var(--goiaba);color:#fff}
+    .btn-ghost{background:#fff;border:1px solid var(--border)}
     .add-mini{width:36px;height:36px;border-radius:50%;border:1px dashed var(--border);background:#fff;font-size:22px;display:grid;place-items:center;cursor:pointer}
-    .chart-wrap{display:flex;gap:12px;align-items:center;justify-content:space-between} .chart-card{flex:1} .print-fab{width:48px;height:48px;border:none;border-radius:50%;background:#fff;border:1px solid var(--border);box-shadow:var(--shadow);display:grid;place-items:center;cursor:pointer}
-    .summary{display:flex;justify-content:space-between;font-weight:700;margin-top:8px} .muted{color:var(--muted)}
+    .chart-wrap{display:flex;gap:12px;align-items:center;justify-content:space-between}
+    .chart-card{flex:1}
+    .print-fab{width:48px;height:48px;border:none;border-radius:50%;background:#fff;border:1px solid var(--border);box-shadow:var(--shadow);display:grid;place-items:center;cursor:pointer}
+    .summary{display:flex;justify-content:space-between;font-weight:700;margin-top:8px}
+    .muted{color:var(--muted)}
     .zebra{border:1px solid var(--border);border-radius:12px;overflow:hidden}
     .zebra-row{display:grid;grid-template-columns:1fr 1fr .8fr;gap:8px;padding:10px 12px}
     .zebra-row:nth-child(odd){background:#fafafa}
     .zebra-head{font-weight:700;background:#f0f2f5}
     .loading{opacity:0.5;pointer-events:none}
-    @media(max-width:420px){.zebra-row{grid-template-columns:1fr 1fr .8fr}.expense-row{grid-template-columns:1fr 1fr .8fr auto}.chart-wrap{flex-direction:column;align-items:stretch}.print-fab{align-self:flex-end}}
+    @media(max-width:420px){
+      .zebra-row{grid-template-columns:1fr 1fr .8fr}
+      .expense-row{grid-template-columns:1fr 1fr .8fr auto}
+      .chart-wrap{flex-direction:column;align-items:stretch}
+      .print-fab{align-self:flex-end}
+    }
     @media print{header,.month-nav,.add-mini,.btn-row,.print-fab{display:none!important} body{background:#fff} .card{box-shadow:none;border:1px solid #ddd}}
   </style>
 </head>
-  <pre id="debug" style="white-space:pre-wrap;font:12px/1.4 ui-monospace,monospace;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin:12px 8px;max-height:220px;overflow:auto"></pre>
-
 <body>
   <header>
     <div class="title">Minhas Despesas</div>
-    <div class="sub">Rápido, minimalista, iPhone‑like</div>
+    <div class="sub">Rápido, minimalista, iPhone-like</div>
   </header>
 
   <div class="container">
+    <!-- Painel de debug (opcional) -->
+    <pre id="debug" style="white-space:pre-wrap;font:12px/1.4 ui-monospace,monospace;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin:12px 8px;max-height:220px;overflow:auto"></pre>
+
     <section class="card">
       <div class="month-nav">
         <button class="month-btn" id="prevMonth" aria-label="Mês anterior">◀</button>
@@ -81,25 +97,42 @@
       </div>
       <div class="summary"><div>Total receitas</div><div id="sumIncome">R$ 0,00</div></div>
       <div class="summary"><div>Total despesas</div><div id="sumExpense">R$ 0,00</div></div>
-      <div class="summary"><div>Saldo (com carry‑over)</div><div id="balance">R$ 0,00</div></div>
-      <div class="muted" style="margin-top:6px;">* O saldo restante de cada mês soma ao próximo; se negativo, desconta do próximo. Submissões repetidas no mesmo dia **substituem** os lançamentos daquele dia.</div>
+      <div class="summary"><div>Saldo (com carry-over)</div><div id="balance">R$ 0,00</div></div>
+      <div class="muted" style="margin-top:6px;">* O saldo restante de cada mês soma ao próximo; se negativo, desconta do próximo. Submissões repetidas no mesmo dia <b>substituem</b> os lançamentos daquele dia.</div>
     </section>
   </div>
 
 <script>
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxuUOfZJeCezGrF2P_bp3pOki_qZfAP_EAGFCnLtofyq5AN5HF9rwa_ERdxNWnGFaRhHA/exec';
-const CATEGORIES = ['Aluguel','Passeio','Alimentacao','Compra de manutencao','Medico','gasolina','conserto','roupas','calcado','gadget','telefonia','Assinaturas Mensais','Cantina da Escola','Energia','oferta','Transporte','Internet','Água','IPTU','Educação','Lazer','Presentes','Farmácia','Outros'];
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwMNBWfTmB4lT6V3wJAks_AE3X96XFVuIRb1L9JdpnlmbRyYpN5OlZW3pFtMm572NVBTQ/exec';
+
+// use os mesmos nomes/acentos do backend para evitar categorias duplicadas
+const CATEGORIES = [
+  'Aluguel','Passeio','Alimentação','Compra de manutenção','Médico','Gasolina',
+  'Conserto','Roupas','Calçado','Gadget','Telefonia','Assinaturas Mensais',
+  'Cantina da Escola','Energia','Oferta','Supermercado','Internet','Água','Gás',
+  'Transporte','Lazer','Educação','Investimentos','Doações','IPTU','Presentes','Farmácia','Outros'
+];
 
 let currentYM = toYM(new Date());
 let chart;
 
+// ---------- Helpers ----------
 function toYM(d){const y=d.getFullYear();const m=(d.getMonth()+1+"").padStart(2,'0');return `${y}-${m}`}
 function todayISO(ym){const [y,m]=ym.split('-');const now=new Date();const d=String(now.getDate()).padStart(2,'0');return `${y}-${m}-${d}`}
 function ymToLabel(ym){const [y,m]=ym.split('-').map(Number);const date=new Date(y,m-1,1);return date.toLocaleDateString('pt-BR',{month:'long',year:'numeric'})}
-function money(n){return n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+function money(n){return (Number(n)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
 function el(id){return document.getElementById(id)}
+function showDebug(label, data) {
+  const box = document.getElementById('debug'); if (!box) return;
+  const txt = `[${new Date().toLocaleTimeString()}] ${label}:\n` +
+              (typeof data === 'string' ? data : JSON.stringify(data, null, 2)) +
+              '\n-----------------------------\n';
+  box.textContent = txt + box.textContent;
+  console.log(label, data);
+}
 
-function makeExpenseRow(data={name:'',category:'Alimentacao',amount:''}){
+// ---------- UI builders ----------
+function makeExpenseRow(data={name:'',category:'Alimentação',amount:''}){
   const row=document.createElement('div');row.className='expense-row';
   row.innerHTML=`<input type="text" placeholder="Nome da despesa" value="${data.name||''}" />
     <select>${CATEGORIES.map(c=>`<option ${c===data.category?'selected':''}>${c}</option>`).join('')}</select>
@@ -137,7 +170,7 @@ function renderZebra(expenses){
   head.className='zebra-row zebra-head';
   head.innerHTML='<div>Descrição</div><div>Categoria</div><div style="text-align:right">Valor</div>';
   z.appendChild(head);
-  
+
   if(!expenses||!expenses.length){
     const empty=document.createElement('div');
     empty.className='zebra-row';
@@ -145,7 +178,7 @@ function renderZebra(expenses){
     z.appendChild(empty);
     return;
   }
-  
+
   expenses.forEach(ex=>{
     const r=document.createElement('div');
     r.className='zebra-row';
@@ -154,53 +187,47 @@ function renderZebra(expenses){
   });
 }
 
+// ---------- Networking com logs ----------
 async function fetchJSON(url){
-  try {
-    const r = await fetch(url, {
-      cache: 'no-store',
-      mode: 'cors',
-      credentials: 'omit',
-      headers: {
-        'Accept': 'application/json'
-      }
-    });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const text = await r.text();
-    console.log('Response:', text);
-    return JSON.parse(text);
-  } catch(e) {
-    console.error('Fetch error:', e);
-    throw e;
-  }
+  const full = url + (url.includes('?') ? '&' : '?') + 'ts=' + Date.now();
+  showDebug('HTTP GET →', full);
+  const r = await fetch(full, {
+    cache: 'no-store',
+    mode: 'cors',
+    credentials: 'omit',
+    headers: { 'Accept': 'application/json' }
+  });
+  const text = await r.text();
+  showDebug('HTTP GET raw ←', text);
+  let json;
+  try { json = JSON.parse(text); } catch (e) { showDebug('HTTP GET JSON parse ERROR', e.message); throw e; }
+  showDebug('HTTP GET json ←', json);
+  return json;
 }
-
-async function fetchMonth(ym){
-  const ts=Date.now();
-  const url = `${WEB_APP_URL}?action=getMonth&ym=${encodeURIComponent(ym)}&ts=${ts}`;
-  console.log('Fetching:', url);
-  return await fetchJSON(url);
-}
-
+async function fetchMonth(ym){ return await fetchJSON(`${WEB_APP_URL}?action=getMonth&ym=${encodeURIComponent(ym)}`); }
 async function fetchMeta(){
-  const ts=Date.now();
   try{
-    const j=await fetchJSON(`${WEB_APP_URL}?action=meta&ts=${ts}`);
+    const j=await fetchJSON(`${WEB_APP_URL}?action=meta`);
     if(j.defaultSalary&&!el('salary').value) el('salary').value=j.defaultSalary;
-  }catch(e){
-    console.error('Meta fetch error:', e);
-  }
+  }catch(e){ /* segue a vida */ }
 }
 
 async function saveMonth(payload){
+  showDebug('HTTP POST → payload', payload);
   const r=await fetch(WEB_APP_URL,{
     method:'POST',
     headers:{'Content-Type':'text/plain;charset=utf-8'},
     cache:'no-store',
     body:JSON.stringify(payload)
   });
-  return await r.json();
+  const txt = await r.text();
+  showDebug('HTTP POST raw ←', txt);
+  let json; try { json = JSON.parse(txt); } catch(e){ showDebug('HTTP POST JSON parse ERROR', e.message); throw e; }
+  showDebug('HTTP POST json ←', json);
+  return json;
 }
 
+// ---------- Chart ----------
 function renderBarChart(byCategory){
   const ctx=el('bar');
   const labels=Object.keys(byCategory);
@@ -208,113 +235,76 @@ function renderBarChart(byCategory){
   if(chart)chart.destroy();
   chart=new Chart(ctx,{
     type:'bar',
-    data:{
-      labels,
-      datasets:[{label:'Despesas por categoria',data}]
-    },
-    options:{
-      responsive:true,
-      plugins:{legend:{display:false}},
-      scales:{y:{beginAtZero:true}}
-    }
+    data:{ labels, datasets:[{ label:'Despesas por categoria', data }]},
+    options:{ responsive:true, plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true } } }
   });
 }
 
+// ---------- Fluxo ----------
 async function loadYM(ym){
   try {
     document.body.classList.add('loading');
     currentYM=ym;
     el('monthLabel').textContent=ymToLabel(ym);
-    
-    console.log('Loading month:', ym);
+
     const data = await fetchMonth(ym);
-    console.log('Month data received:', data);
-    
-    // Verificar se há erro
-    if (data.ok === false) {
-      alert('Erro ao carregar dados: ' + (data.error || 'desconhecido'));
+    showDebug('loadYM data', data);
+    if (data && data.ok === false) {
+      alert('Erro ao carregar: ' + (data.error || 'desconhecido'));
       return;
     }
-    
-    // Preencher UI
+
     el('salary').value = (data.salary ?? 2600);
-    el('extra').value = (data.extraIncome ?? 0);
-    
-    // Renderizar despesas para edição E para visualização
-    console.log('Expenses:', data.expenses);
+    el('extra').value  = (data.extraIncome ?? 0);
+
     renderExpensesList(data.expenses || []);
     renderZebra(data.expenses || []);
-    
-    // Totais
+
     el('sumIncome').textContent = money(data.totalIncome || 0);
     el('sumExpense').textContent = money(data.totalExpenses || 0);
-    el('balance').textContent = money(data.balance || 0);
-    
-    // Gráfico
+    el('balance').textContent   = money(data.balance || 0);
+
     renderBarChart(data.byCategory || {});
   } catch(err) {
-    console.error('Load error:', err);
-    alert('Erro ao carregar mês: ' + err.message);
+    showDebug('loadYM ERROR', err.message || err);
+    alert('Falha ao carregar mês: ' + (err.message || err));
   } finally {
     document.body.classList.remove('loading');
   }
 }
 
 window.addEventListener('DOMContentLoaded',async()=>{
-  console.log('App initialized');
   await fetchMeta();
   await loadYM(currentYM);
-  
-  el('addExpense').addEventListener('click',()=>{
-    el('expensesList').appendChild(makeExpenseRow());
-  });
-  
+
+  el('addExpense').addEventListener('click',()=> el('expensesList').appendChild(makeExpenseRow()));
+
   el('saveBtn').addEventListener('click',async()=>{
     try{
-      const expenses = getExpensesFromDOM();
-      console.log('Saving expenses:', expenses);
-      
       const payload={
         ym:currentYM,
-        dateISO:todayISO(currentYM),
+        dateISO:todayISO(currentYM), // sobrescreve pelos lançamentos do DIA
         salary:parseFloat(el('salary').value||'0')||0,
         extraIncome:parseFloat(el('extra').value||'0')||0,
-        expenses: expenses
+        expenses:getExpensesFromDOM()
       };
-      
-      console.log('Payload:', payload);
       const res=await saveMonth(payload);
-      console.log('Save response:', res);
-      
       if(res&&res.ok){
         alert('Lançamentos salvos!');
-        await loadYM(currentYM);
+        await loadYM(currentYM); // recarrega do servidor (lista + totais + gráfico)
       } else {
         alert('Falha ao salvar: '+(res&&res.error?res.error:'erro desconhecido'));
       }
     }catch(err){
-      console.error('Save error:', err);
       alert('Erro ao salvar: '+err.message);
     }
   });
-  
-  el('clearLocal').addEventListener('click',()=>{
-    renderExpensesList([]);
-  });
-  
-  el('printBtn').addEventListener('click',()=>window.print());
-  
-  el('prevMonth').addEventListener('click',()=>{
-    const [y,m]=currentYM.split('-').map(Number);
-    const d=new Date(y,m-2,1);
-    loadYM(toYM(d));
-  });
-  
-  el('nextMonth').addEventListener('click',()=>{
-    const [y,m]=currentYM.split('-').map(Number);
-    const d=new Date(y,m,1);
-    loadYM(toYM(d));
-  });
+
+  el('clearLocal').addEventListener('click',()=> renderExpensesList([]));
+  el('printBtn').addEventListener('click',()=> window.print());
+
+  el('prevMonth').addEventListener('click',()=>{ const [y,m]=currentYM.split('-').map(Number); const d=new Date(y,m-2,1); loadYM(toYM(d)); });
+  el('nextMonth').addEventListener('click',()=>{ const [y,m]=currentYM.split('-').map(Number); const d=new Date(y,m,1);  loadYM(toYM(d)); });
 });
 </script>
 </body>
