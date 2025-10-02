@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -28,6 +27,7 @@
     .zebra-row{display:grid;grid-template-columns:1fr 1fr .8fr;gap:8px;padding:10px 12px}
     .zebra-row:nth-child(odd){background:#fafafa}
     .zebra-head{font-weight:700;background:#f0f2f5}
+    .loading{opacity:0.5;pointer-events:none}
     @media(max-width:420px){.zebra-row{grid-template-columns:1fr 1fr .8fr}.expense-row{grid-template-columns:1fr 1fr .8fr auto}.chart-wrap{flex-direction:column;align-items:stretch}.print-fab{align-self:flex-end}}
     @media print{header,.month-nav,.add-mini,.btn-row,.print-fab{display:none!important} body{background:#fff} .card{box-shadow:none;border:1px solid #ddd}}
   </style>
@@ -68,7 +68,7 @@
       <div id="expensesList"></div>
       <div class="btn-row" style="margin-top:10px;">
         <button class="btn btn-blue" id="saveBtn">Enviar</button>
-        <button class="btn btn-ghost" id="clearLocal">Limpar rascunho</button>
+        <button class="btn btn-ghost" id="clearLocal">Limpar formulário</button>
       </div>
     </section>
 
@@ -85,7 +85,7 @@
   </div>
 
 <script>
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx4T4zvCEA-Eg88k9Hox0wbi5_8hevmFYvu4_Z_11nWSZ16w4nC_JZ5GV9YnFekpx3tjA/exec';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyGII3qiW4Zzj2rb1_b7YLRmKL7-NXYBdFjO9FJs6XnEswAEkii_2ScJjAkHYdtt9qlSg/exec';
 const CATEGORIES = ['Aluguel','Passeio','Alimentacao','Compra de manutencao','Medico','gasolina','conserto','roupas','calcado','gadget','telefonia','Assinaturas Mensais','Cantina da Escola','Energia','oferta','Transporte','Internet','Água','IPTU','Educação','Lazer','Presentes','Farmácia','Outros'];
 
 let currentYM = toYM(new Date());
@@ -99,77 +99,220 @@ function el(id){return document.getElementById(id)}
 
 function makeExpenseRow(data={name:'',category:'Alimentacao',amount:''}){
   const row=document.createElement('div');row.className='expense-row';
-  row.innerHTML=`<input type=\"text\" placeholder=\"Nome da despesa\" value=\"${data.name||''}\" />
+  row.innerHTML=`<input type="text" placeholder="Nome da despesa" value="${data.name||''}" />
     <select>${CATEGORIES.map(c=>`<option ${c===data.category?'selected':''}>${c}</option>`).join('')}</select>
-    <input type=\"number\" inputmode=\"decimal\" placeholder=\"0,00\" value=\"${data.amount||''}\" />
-    <button class=\"btn btn-goiaba\" title=\"Remover\">×</button>`;
+    <input type="number" inputmode="decimal" placeholder="0,00" value="${data.amount||''}" />
+    <button class="btn btn-goiaba" title="Remover">×</button>`;
   const delBtn=row.children[3];delBtn.addEventListener('click',()=>row.remove());
   return row;
 }
 
-function getExpensesFromDOM(){return[...document.querySelectorAll('#expensesList .expense-row')].map(row=>{const [nameEl,catEl,amtEl]=row.children;return{name:nameEl.value.trim(),category:catEl.value,amount:parseFloat((amtEl.value||'').replace(',','.'))||0}}).filter(x=>x.name||x.amount>0)}
+function getExpensesFromDOM(){
+  return[...document.querySelectorAll('#expensesList .expense-row')].map(row=>{
+    const [nameEl,catEl,amtEl]=row.children;
+    return{
+      name:nameEl.value.trim(),
+      category:catEl.value,
+      amount:parseFloat((amtEl.value||'').replace(',','.'))||0
+    }
+  }).filter(x=>x.name||x.amount>0);
+}
 
-function renderExpensesList(expenses){const list=el('expensesList');list.innerHTML='';if(!expenses||expenses.length===0){list.appendChild(makeExpenseRow())}else{expenses.forEach(ex=>list.appendChild(makeExpenseRow(ex)))}}
+function renderExpensesList(expenses){
+  const list=el('expensesList');
+  list.innerHTML='';
+  if(!expenses||expenses.length===0){
+    list.appendChild(makeExpenseRow());
+  }else{
+    expenses.forEach(ex=>list.appendChild(makeExpenseRow(ex)));
+  }
+}
 
 function renderZebra(expenses){
   const z=el('zebra');
   z.innerHTML='';
-  const head=document.createElement('div');head.className='zebra-row zebra-head';head.innerHTML='<div>Descrição</div><div>Categoria</div><div style="text-align:right">Valor</div>';
+  const head=document.createElement('div');
+  head.className='zebra-row zebra-head';
+  head.innerHTML='<div>Descrição</div><div>Categoria</div><div style="text-align:right">Valor</div>';
   z.appendChild(head);
+  
   if(!expenses||!expenses.length){
-    const empty=document.createElement('div');empty.className='zebra-row';empty.innerHTML='<div>Nenhuma despesa lançada</div><div>-</div><div style="text-align:right">R$ 0,00</div>';
-    z.appendChild(empty);return;
+    const empty=document.createElement('div');
+    empty.className='zebra-row';
+    empty.innerHTML='<div>Nenhuma despesa lançada</div><div>-</div><div style="text-align:right">R$ 0,00</div>';
+    z.appendChild(empty);
+    return;
   }
+  
   expenses.forEach(ex=>{
-    const r=document.createElement('div');r.className='zebra-row';r.innerHTML=`<div>${ex.name||ex.category}</div><div>${ex.category}</div><div style="text-align:right">${money(ex.amount||0)}</div>`;z.appendChild(r);
+    const r=document.createElement('div');
+    r.className='zebra-row';
+    r.innerHTML=`<div>${ex.name||ex.category}</div><div>${ex.category}</div><div style="text-align:right">${money(ex.amount||0)}</div>`;
+    z.appendChild(r);
   });
 }
 
-async function fetchJSON(url){const r=await fetch(url,{cache:'no-store',mode:'cors',credentials:'omit'});return await r.json();}
-async function fetchMonth(ym){const ts=Date.now();return await fetchJSON(`${WEB_APP_URL}?action=getMonth&ym=${encodeURIComponent(ym)}&ts=${ts}`)}
-async function fetchMeta(){const ts=Date.now();try{const j=await fetchJSON(`${WEB_APP_URL}?action=meta&ts=${ts}`);if(j.defaultSalary&&!el('salary').value)el('salary').value=j.defaultSalary}catch(e){}}
+async function fetchJSON(url){
+  try {
+    const r = await fetch(url, {
+      cache: 'no-store',
+      mode: 'cors',
+      credentials: 'omit',
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const text = await r.text();
+    console.log('Response:', text);
+    return JSON.parse(text);
+  } catch(e) {
+    console.error('Fetch error:', e);
+    throw e;
+  }
+}
+
+async function fetchMonth(ym){
+  const ts=Date.now();
+  const url = `${WEB_APP_URL}?action=getMonth&ym=${encodeURIComponent(ym)}&ts=${ts}`;
+  console.log('Fetching:', url);
+  return await fetchJSON(url);
+}
+
+async function fetchMeta(){
+  const ts=Date.now();
+  try{
+    const j=await fetchJSON(`${WEB_APP_URL}?action=meta&ts=${ts}`);
+    if(j.defaultSalary&&!el('salary').value) el('salary').value=j.defaultSalary;
+  }catch(e){
+    console.error('Meta fetch error:', e);
+  }
+}
 
 async function saveMonth(payload){
-  const r=await fetch(WEB_APP_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},cache:'no-store',body:JSON.stringify(payload)});
+  const r=await fetch(WEB_APP_URL,{
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    cache:'no-store',
+    body:JSON.stringify(payload)
+  });
   return await r.json();
 }
 
 function renderBarChart(byCategory){
-  const ctx=el('bar');const labels=Object.keys(byCategory);const data=Object.values(byCategory);
+  const ctx=el('bar');
+  const labels=Object.keys(byCategory);
+  const data=Object.values(byCategory);
   if(chart)chart.destroy();
-  chart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Despesas por categoria',data} ]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+  chart=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[{label:'Despesas por categoria',data}]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{display:false}},
+      scales:{y:{beginAtZero:true}}
+    }
+  });
 }
 
 async function loadYM(ym){
-  currentYM=ym;el('monthLabel').textContent=ymToLabel(ym);
-  const data=await fetchMonth(ym);
-  // preencher UI
-  el('salary').value=(data.salary??2600);
-  el('extra').value=(data.extraIncome??0);
-  renderExpensesList(data.expenses||[]);
-  renderZebra(data.expenses||[]);
-  // totais
-  el('sumIncome').textContent=money((data.totalIncome||0));
-  el('sumExpense').textContent=money((data.totalExpenses||0));
-  el('balance').textContent=money((data.balance||0));
-  renderBarChart(data.byCategory||{});
+  try {
+    document.body.classList.add('loading');
+    currentYM=ym;
+    el('monthLabel').textContent=ymToLabel(ym);
+    
+    console.log('Loading month:', ym);
+    const data = await fetchMonth(ym);
+    console.log('Month data received:', data);
+    
+    // Verificar se há erro
+    if (data.ok === false) {
+      alert('Erro ao carregar dados: ' + (data.error || 'desconhecido'));
+      return;
+    }
+    
+    // Preencher UI
+    el('salary').value = (data.salary ?? 2600);
+    el('extra').value = (data.extraIncome ?? 0);
+    
+    // Renderizar despesas para edição E para visualização
+    console.log('Expenses:', data.expenses);
+    renderExpensesList(data.expenses || []);
+    renderZebra(data.expenses || []);
+    
+    // Totais
+    el('sumIncome').textContent = money(data.totalIncome || 0);
+    el('sumExpense').textContent = money(data.totalExpenses || 0);
+    el('balance').textContent = money(data.balance || 0);
+    
+    // Gráfico
+    renderBarChart(data.byCategory || {});
+  } catch(err) {
+    console.error('Load error:', err);
+    alert('Erro ao carregar mês: ' + err.message);
+  } finally {
+    document.body.classList.remove('loading');
+  }
 }
 
 window.addEventListener('DOMContentLoaded',async()=>{
+  console.log('App initialized');
   await fetchMeta();
   await loadYM(currentYM);
-  el('addExpense').addEventListener('click',()=>{el('expensesList').appendChild(makeExpenseRow())});
+  
+  el('addExpense').addEventListener('click',()=>{
+    el('expensesList').appendChild(makeExpenseRow());
+  });
+  
   el('saveBtn').addEventListener('click',async()=>{
     try{
-      const payload={ym:currentYM,dateISO:todayISO(currentYM),salary:parseFloat(el('salary').value||'0')||0,extraIncome:parseFloat(el('extra').value||'0')||0,expenses:getExpensesFromDOM()};
+      const expenses = getExpensesFromDOM();
+      console.log('Saving expenses:', expenses);
+      
+      const payload={
+        ym:currentYM,
+        dateISO:todayISO(currentYM),
+        salary:parseFloat(el('salary').value||'0')||0,
+        extraIncome:parseFloat(el('extra').value||'0')||0,
+        expenses: expenses
+      };
+      
+      console.log('Payload:', payload);
       const res=await saveMonth(payload);
-      if(res&&res.ok){await loadYM(currentYM);alert('Lançamentos salvos!')} else {alert('Falha ao salvar: '+(res&&res.error?res.error:'erro desconhecido'))}
-    }catch(err){alert('Erro de rede/CORS. Verifique Web App publicado como "Anyone with the link".')}
+      console.log('Save response:', res);
+      
+      if(res&&res.ok){
+        alert('Lançamentos salvos!');
+        await loadYM(currentYM);
+      } else {
+        alert('Falha ao salvar: '+(res&&res.error?res.error:'erro desconhecido'));
+      }
+    }catch(err){
+      console.error('Save error:', err);
+      alert('Erro ao salvar: '+err.message);
+    }
   });
-  el('clearLocal').addEventListener('click',()=>{localStorage.removeItem('financeDraft:'+currentYM);renderExpensesList([])});
+  
+  el('clearLocal').addEventListener('click',()=>{
+    renderExpensesList([]);
+  });
+  
   el('printBtn').addEventListener('click',()=>window.print());
-  el('prevMonth').addEventListener('click',()=>{const [y,m]=currentYM.split('-').map(Number);const d=new Date(y,m-2,1);loadYM(toYM(d))});
-  el('nextMonth').addEventListener('click',()=>{const [y,m]=currentYM.split('-').map(Number);const d=new Date(y,m,1);loadYM(toYM(d))});
+  
+  el('prevMonth').addEventListener('click',()=>{
+    const [y,m]=currentYM.split('-').map(Number);
+    const d=new Date(y,m-2,1);
+    loadYM(toYM(d));
+  });
+  
+  el('nextMonth').addEventListener('click',()=>{
+    const [y,m]=currentYM.split('-').map(Number);
+    const d=new Date(y,m,1);
+    loadYM(toYM(d));
+  });
 });
 </script>
 </body>
