@@ -18,8 +18,20 @@
       --shadow:0 10px 24px rgba(2,6,23,.5);
       --radius:18px;
     }
+    /* Tema claro */
+    html[data-theme="light"]{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --muted:#475569;
+      --text:#0f172a;
+      --brand:#0ea5e9;
+      --good:#059669;
+      --bad:#dc2626;
+      --ring:rgba(14,165,233,.35);
+      --shadow:0 6px 18px rgba(2,6,23,.08)
+    }
     *{box-sizing:border-box}
-    html,body{margin:0;background:linear-gradient(180deg,#0b1020,#0b1020 50%,#0b132a);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,'Noto Sans',sans-serif}
+    html,body{margin:0;background:linear-gradient(180deg,var(--bg),var(--bg) 50%,#0b132a);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,'Noto Sans',sans-serif}
     a{color:var(--brand)}
 
     .wrap{max-width:860px;margin:0 auto;padding:16px}
@@ -60,10 +72,12 @@
     input,select,textarea{
       width:100%;padding:12px;border-radius:12px;background:#0b1228;border:1px solid rgba(148,163,184,.2)
     }
+    html[data-theme="light"] input, html[data-theme="light"] select, html[data-theme="light"] textarea{ background:#f1f5f9 }
     input:focus,select:focus,textarea:focus{outline:2px solid var(--ring);border-color:transparent}
 
     .totals{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
     .kpi{padding:14px;border-radius:14px;background:#0f172a;border:1px solid rgba(148,163,184,.2);text-align:center}
+    html[data-theme="light"] .kpi{background:#f8fafc}
     .kpi small{display:block;color:var(--muted)}
     .kpi .good{color:var(--good);font-weight:700}
     .kpi .bad{color:var(--bad);font-weight:700}
@@ -73,6 +87,7 @@
     .item{list-style:none;display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:12px;border-top:1px solid rgba(148,163,184,.15)}
     .item:first-child{border-top:none}
     .tag{font-size:12px;padding:4px 8px;border-radius:999px;background:#0b1228;border:1px solid rgba(148,163,184,.2);color:var(--muted)}
+    html[data-theme="light"] .tag{background:#eef2f7}
     .amt{font-weight:700}
     .amt.negative{color:var(--bad)}
     .amt.positive{color:var(--good)}
@@ -85,6 +100,7 @@
     .summary{display:grid;gap:8px}
     .summary-row{display:flex;align-items:center;gap:10px}
     .bar{flex:1;height:10px;background:#0b1228;border:1px solid rgba(148,163,184,.2);border-radius:999px;overflow:hidden}
+    html[data-theme="light"] .bar{background:#e2e8f0}
     .bar > span{display:block;height:100%;background:linear-gradient(90deg,var(--brand),#22d3ee)}
 
     .footer{margin-top:24px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
@@ -92,6 +108,7 @@
 
     .tabs{display:flex;gap:6px;margin:12px 0}
     .tabs button{background:#0f172a;border-color:rgba(148,163,184,.25)}
+    html[data-theme="light"] .tabs button{background:#e2e8f0}
     .tabs button.active{background:linear-gradient(180deg,#0ea5e9,#0284c7);border-color:transparent}
 
     .hidden{display:none!important}
@@ -108,6 +125,7 @@
         <button id="prevMonth" title="Mês anterior">◀</button>
         <div class="pill"><strong id="monthLabel">--/----</strong></div>
         <button id="nextMonth" title="Próximo mês">▶</button>
+        <button id="themeToggle" title="Alternar tema">🌙</button>
       </div>
     </div>
   </header>
@@ -117,6 +135,7 @@
       <button class="tabBtn active" data-tab="tab-form">Lançar</button>
       <button class="tabBtn" data-tab="tab-extrato">Extrato</button>
       <button class="tabBtn" data-tab="tab-resumo">Resumo</button>
+      <button class="tabBtn" data-tab="tab-config">Config</button>
     </div>
 
     <section class="grid">
@@ -181,11 +200,14 @@
           <ul class="list" id="txList"></ul>
 
           <div class="footer">
+            <div id="forecastLine" class="subtle" style="flex:1"></div>
             <div class="toolbar">
               <button id="exportJson">Exportar JSON</button>
               <button id="exportCsv">Exportar CSV</button>
               <label class="btn" for="importFile">Importar</label>
               <input id="importFile" type="file" accept=".json,.csv" class="hidden" />
+              <button id="pushRemote" title="Enviar para Planilha">Sincronizar →</button>
+              <button id="pullRemote" title="Baixar da Planilha">← Baixar</button>
             </div>
             <button id="clearMonth" class="danger">Apagar mês atual</button>
           </div>
@@ -198,6 +220,42 @@
           <div class="summary" id="summary"></div>
         </div>
       </div>
+
+      <div class="card" id="tab-config" style="display:none">
+        <div style="padding:16px">
+          <h2>Configurações</h2>
+          <form id="cfgForm" class="full" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <label for="salary">Salário previsto (R$)</label>
+              <input id="salary" type="number" inputmode="decimal" step="0.01" min="0" placeholder="5000,00" />
+            </div>
+            <div>
+              <label for="themeSelect">Tema</label>
+              <select id="themeSelect">
+                <option value="dark">Escuro</option>
+                <option value="light">Claro</option>
+              </select>
+            </div>
+            <div class="full"><small class="subtle">Sincronização opcional com Google Planilhas via Apps Script (cole a URL implantada como Web App e um token).</small></div>
+            <div>
+              <label for="endpoint">Endpoint (URL do Web App)</label>
+              <input id="endpoint" placeholder="https://script.google.com/macros/s/AKfycbzJ48ug2-4scAUS31FNElMbIOLQWZvjt4GyMotUAxIcJdKsB31GvTv2l_cPqkxkkiSe/exec" />
+            </div>
+            <div>
+              <label for="token">Token (X-API-Key)</label>
+              <input id="token" placeholder="chave-secreta" />
+            </div>
+            <div class="full row between">
+              <div class="toolbar">
+                <button type="submit">Salvar config</button>
+                <button type="button" id="cfgReset">Padrões</button>
+              </div>
+              <span class="subtle" id="cfgHint"></span>
+            </div>
+          </form>
+        </div>
+      </div>
+
     </section>
   </main>
 
@@ -209,7 +267,8 @@
     const state = {
       ym: ymFromDate(new Date()),
       editingId: null,
-      data: load() // { ["YYYY-MM"]: Transaction[] }
+      data: load(), // { ["YYYY-MM"]: Transaction[] }
+      settings: loadSettings() // {salary, theme, remote}
     }
 
     // ===== Helpers =====
@@ -227,7 +286,11 @@
     function uid(){return Math.random().toString(36).slice(2)+Date.now().toString(36)}
 
     function save(){ localStorage.setItem('budget:v1', JSON.stringify(state.data)) }
+    function saveSettings(){ localStorage.setItem('budget:settings', JSON.stringify(state.settings)) }
     function load(){ try{ return JSON.parse(localStorage.getItem('budget:v1'))||{} }catch{ return {} } }
+    function loadSettings(){
+      try{ return JSON.parse(localStorage.getItem('budget:settings'))||{salary:5000, theme:'dark', remote:{endpoint:'',token:''}} }catch{ return {salary:5000, theme:'dark', remote:{endpoint:'',token:''}} }
+    }
 
     function txsOfMonth(ym){ return state.data[ym] || [] }
     function setMonth(ym){ state.ym = ym; $('#monthLabel').textContent = labelYM(ym); renderAll() }
@@ -248,7 +311,7 @@
         $$('.tabBtn').forEach(b=>b.classList.remove('active'))
         btn.classList.add('active')
         const tab=btn.dataset.tab
-        ;['tab-form','tab-extrato','tab-resumo'].forEach(id=>{
+        ;['tab-form','tab-extrato','tab-resumo','tab-config'].forEach(id=>{
           const el = document.getElementById(id)
           el.style.display = (id===tab)?'block':'none'
         })
@@ -259,10 +322,19 @@
     $('#prevMonth').onclick=()=> setMonth(addMonths(state.ym,-1))
     $('#nextMonth').onclick=()=> setMonth(addMonths(state.ym,1))
 
+    // Theme toggle + persist
+    const root = document.documentElement
+    function applyTheme(){ root.setAttribute('data-theme', state.settings.theme==='light'?'light':'dark') }
+    $('#themeToggle').onclick = ()=>{ state.settings.theme = state.settings.theme==='light'?'dark':'light'; applyTheme(); saveSettings(); updateThemeBtn() }
+    function updateThemeBtn(){ $('#themeToggle').textContent = state.settings.theme==='light'?'☀️':'🌙'; $('#themeSelect') && ($('#themeSelect').value = state.settings.theme) }
+
     // ===== Form =====
     const form = $('#txForm')
     const fields = ['type','amount','category','date','note'].reduce((acc,id)=>{acc[id]=$('#'+id);return acc},{})
     fields.date.valueAsDate = new Date()
+
+    // permitir vírgula no valor
+    fields.amount.addEventListener('input', (e)=>{ e.target.value = e.target.value.replace(',', '.') })
 
     $('#resetForm').onclick = () => {
       state.editingId=null; form.reset(); fields.type.value='expense'; fields.date.valueAsDate=new Date(); $('#editHint').textContent=''
@@ -288,7 +360,6 @@
       save();
       $('#resetForm').click();
       renderAll();
-      // focus to speed repetitive entry
       fields.amount.focus()
     })
 
@@ -351,7 +422,6 @@
           fields.date.value = t.date
           fields.note.value = t.note||''
           $('#editHint').textContent = 'Editando lançamento — salve para confirmar ou "Limpar" para cancelar.'
-          // mudar para aba lançar
           document.querySelector('[data-tab="tab-form"]').click()
           fields.amount.focus()
         }
@@ -374,6 +444,11 @@
       $('#kpiIn').textContent = fmtBRL(income)
       $('#kpiOut').textContent = fmtBRL(expense)
       $('#kpiBal').textContent = fmtBRL(balance)
+      // previsão simples para próximo mês
+      const nextYM = addMonths(state.ym, 1)
+      const forecast = (state.settings.salary||0) - expense
+      const msg = `Previsão ${labelYM(nextYM)}: saldo estimado ${fmtBRL(forecast)} (salário previsto ${fmtBRL(state.settings.salary||0)} − despesas de ${labelYM(state.ym)} ${fmtBRL(expense)}).`
+      const el = $('#forecastLine'); if(el) el.textContent = msg
     }
 
     function renderSummary(){
@@ -409,10 +484,16 @@
       Object.values(state.data).flat().forEach(t=>{ if(t.category) set.add(t.category) })
       const dl = $('#catList')
       dl.innerHTML = Array.from(set).sort().map(c=>`<option value="${escapeHtml(c)}"></option>`).join('')
+      // preencher config UI
+      const s = state.settings
+      const salEl = $('#salary'); if(salEl) salEl.value = String(s.salary)
+      const thEl = $('#themeSelect'); if(thEl) thEl.value = s.theme
+      $('#endpoint') && ($('#endpoint').value = s.remote.endpoint)
+      $('#token') && ($('#token').value = s.remote.token)
     }
 
     function renderAll(){
-      renderKPIs(); renderList(); renderSummary(); renderCatHints()
+      renderKPIs(); renderList(); renderSummary(); renderCatHints(); updateThemeBtn()
     }
 
     // ===== Export/Import =====
@@ -452,7 +533,7 @@
             const tx = {
               id: cols[idx.id]||uid(),
               type: cols[idx.type],
-              amount: parseAmount(cols[idx.amount].replace(',', '.')),
+              amount: parseAmount((cols[idx.amount]||'').replace(',', '.')),
               category: unquote(cols[idx.category]),
               date: cols[idx.date],
               note: unquote(cols[idx.note]||''),
@@ -478,6 +559,26 @@
       }
     }
 
+    // Remote sync (Google Apps Script)
+    async function pushRemote(){
+      const {endpoint, token} = state.settings.remote
+      if(!endpoint){ alert('Configure o endpoint em Config > Endpoint'); return }
+      const res = await fetch(endpoint, {method:'POST', headers:{'Content-Type':'application/json','X-API-Key':token||''}, body: JSON.stringify({op:'push', data: state.data, settings: state.settings, updatedAt: new Date().toISOString()})})
+      const j = await res.json().catch(()=>({}))
+      alert(j && j.ok ? 'Sincronizado com sucesso!' : 'Falha ao sincronizar.')
+    }
+    async function pullRemote(){
+      const {endpoint, token} = state.settings.remote
+      if(!endpoint){ alert('Configure o endpoint em Config > Endpoint'); return }
+      const url = endpoint + (endpoint.includes('?')?'&':'?') + 'op=pull'
+      const res = await fetch(url, {headers:{'X-API-Key':token||''}})
+      const j = await res.json().catch(()=>null)
+      if(j && j.ok && j.data){ state.data = j.data; save(); renderAll(); alert('Dados baixados!') }
+      else alert('Falha ao baixar dados.')
+    }
+    $('#pushRemote').onclick = pushRemote
+    $('#pullRemote').onclick = pullRemote
+
     // ===== Utils =====
     function downloadBlob(blob, filename){
       const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000)
@@ -487,7 +588,7 @@
       const needs = /[",\n]/.test(s)
       return needs ? '"'+s.replaceAll('"','""')+'"' : s
     }
-    function unquote(s){ return String(s||'').replace(/^\"|\"$/g,'').replaceAll('""','"') }
+    function unquote(s){ return String(s||'').replace(/^\\"|\\"$/g,'').replaceAll('""','"') }
     function escapeHtml(s){
       return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;')
     }
@@ -496,12 +597,12 @@
       for(let i=0;i<line.length;i++){
         const ch=line[i]
         if(q){
-          if(ch==='"' && line[i+1]==='"'){ cur+='"'; i++ }
-          else if(ch==='"'){ q=false }
+          if(ch=='"' && line[i+1]=='"'){ cur+='"'; i++ }
+          else if(ch=='"'){ q=false }
           else cur+=ch
         } else {
-          if(ch==='"'){ q=true }
-          else if(ch===','){ out.push(cur); cur='' }
+          if(ch=='"'){ q=true }
+          else if(ch==','){ out.push(cur); cur='' }
           else cur+=ch
         }
       }
@@ -511,8 +612,12 @@
 
     // ===== Init =====
     $('#monthLabel').textContent = labelYM(state.ym)
-    renderAll()
+    applyTheme(); updateThemeBtn(); renderAll()
   })()
   </script>
+
+  <details style="max-width:860px;margin:24px auto;color:var(--muted)">
+
+  </details>
 </body>
 </html>
